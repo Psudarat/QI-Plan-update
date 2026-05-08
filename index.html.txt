@@ -1,0 +1,587 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Countermeasure Project Hub</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- Supabase JS -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <!-- FontAwesome -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Sarabun', 'sans-serif'],
+                    },
+                    colors: {
+                        brand: {
+                            dark: '#0f172a',
+                            blue: '#1e3a8a',
+                            light: '#f8fafc'
+                        },
+                        status: {
+                            completed: '#22c55e',
+                            progress: '#eab308',
+                            pending: '#ef4444'
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        body { background-color: #f1f5f9; }
+        .hide { display: none !important; }
+        .toast-enter { animation: slideInRight 0.3s ease-out forwards; }
+        .toast-leave { animation: slideOutRight 0.3s ease-in forwards; }
+        
+        @keyframes slideInRight {
+            from { transform: translateX(100%); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+        @keyframes slideOutRight {
+            from { transform: translateX(0); opacity: 1; }
+            to { transform: translateX(100%); opacity: 0; }
+        }
+
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar { width: 8px; height: 8px; }
+        ::-webkit-scrollbar-track { background: #f1f1f1; }
+        ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+    </style>
+</head>
+<body class="text-slate-800 h-screen flex flex-col font-sans">
+
+    <!-- Navbar -->
+    <nav class="bg-brand-dark text-white shadow-lg z-10 flex-shrink-0">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex items-center justify-between h-16">
+                <div class="flex items-center gap-3">
+                    <div class="bg-white/10 p-2 rounded-full">
+                        <i class="fa-solid fa-anchor text-xl"></i>
+                    </div>
+                    <div>
+                        <h1 class="font-bold text-lg leading-tight tracking-wider">COUNTERMEASURE PROJECT HUB</h1>
+                        <p class="text-xs text-slate-400">Overview Status & Data Entry</p>
+                    </div>
+                </div>
+                <div class="flex space-x-2">
+                    <button id="btn-nav-dashboard" onclick="switchTab('dashboard')" class="bg-brand-blue hover:bg-blue-800 text-white px-4 py-2 rounded-md text-sm font-medium transition-colors border border-blue-700 shadow-inner">
+                        <i class="fa-solid fa-chart-pie mr-1"></i> แดชบอร์ด
+                    </button>
+                    <button id="btn-nav-form" onclick="switchTab('form')" class="hover:bg-slate-800 text-slate-300 hover:text-white px-4 py-2 rounded-md text-sm font-medium transition-colors">
+                        <i class="fa-solid fa-plus mr-1"></i> เพิ่มงานใหม่
+                    </button>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Content Area -->
+    <main class="flex-1 overflow-auto p-4 sm:p-6 lg:p-8">
+        <div class="max-w-7xl mx-auto">
+            
+            <!-- ================= DASHBOARD VIEW ================= -->
+            <div id="view-dashboard" class="space-y-6">
+                
+                <!-- KPI Cards -->
+                <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+                    <div class="bg-brand-dark text-white rounded-xl shadow-sm p-4 flex items-center justify-between border-l-4 border-slate-500">
+                        <div>
+                            <p class="text-slate-400 text-xs font-semibold uppercase tracking-wider mb-1">Total Projects</p>
+                            <h3 class="text-3xl font-bold" id="kpi-total">0</h3>
+                        </div>
+                        <div class="bg-white/10 p-3 rounded-lg text-slate-300">
+                            <i class="fa-solid fa-clipboard-list text-2xl"></i>
+                        </div>
+                    </div>
+                    <div class="bg-white rounded-xl shadow-sm p-4 flex items-center justify-between border-l-4 border-status-completed">
+                        <div>
+                            <p class="text-slate-500 text-xs font-semibold uppercase tracking-wider mb-1">Completed</p>
+                            <h3 class="text-3xl font-bold text-slate-800" id="kpi-completed">0</h3>
+                        </div>
+                        <div class="bg-green-100 p-3 rounded-lg text-status-completed">
+                            <i class="fa-solid fa-check-circle text-2xl"></i>
+                        </div>
+                    </div>
+                    <div class="bg-white rounded-xl shadow-sm p-4 flex items-center justify-between border-l-4 border-status-progress">
+                        <div>
+                            <p class="text-slate-500 text-xs font-semibold uppercase tracking-wider mb-1">In Progress</p>
+                            <h3 class="text-3xl font-bold text-slate-800" id="kpi-progress">0</h3>
+                        </div>
+                        <div class="bg-yellow-100 p-3 rounded-lg text-status-progress">
+                            <i class="fa-solid fa-spinner fa-spin-pulse text-2xl"></i>
+                        </div>
+                    </div>
+                    <div class="bg-white rounded-xl shadow-sm p-4 flex items-center justify-between border-l-4 border-status-pending">
+                        <div>
+                            <p class="text-slate-500 text-xs font-semibold uppercase tracking-wider mb-1">Pending</p>
+                            <h3 class="text-3xl font-bold text-slate-800" id="kpi-pending">0</h3>
+                        </div>
+                        <div class="bg-red-100 p-3 rounded-lg text-status-pending">
+                            <i class="fa-solid fa-clock text-2xl"></i>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Charts Row -->
+                <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                    <!-- Chart 1: Status -->
+                    <div class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
+                        <div class="bg-brand-dark text-white px-4 py-2 text-sm font-semibold text-center">STATUS OVERVIEW</div>
+                        <div class="p-4 relative h-[250px] flex justify-center items-center">
+                            <canvas id="statusChart"></canvas>
+                        </div>
+                    </div>
+                    <!-- Chart 2: Type -->
+                    <div class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
+                        <div class="bg-brand-dark text-white px-4 py-2 text-sm font-semibold text-center">TYPE BREAKDOWN</div>
+                        <div class="p-4 relative h-[250px] flex justify-center items-center">
+                            <canvas id="typeChart"></canvas>
+                        </div>
+                    </div>
+                    <!-- Chart 3: Department -->
+                    <div class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
+                        <div class="bg-brand-dark text-white px-4 py-2 text-sm font-semibold text-center">PROJECTS BY DEPARTMENT</div>
+                        <div class="p-4 relative h-[250px] w-full">
+                            <canvas id="deptChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Table Section -->
+                <div class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
+                    <div class="bg-brand-dark text-white px-4 py-3 text-sm font-semibold flex justify-between items-center">
+                        <span>PROJECT LIST</span>
+                        <span class="text-xs bg-white/20 px-2 py-1 rounded">อัปเดตล่าสุด: <span id="last-update">ตอนนี้</span></span>
+                    </div>
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-sm text-left">
+                            <thead class="text-xs text-slate-500 uppercase bg-slate-50 border-b">
+                                <tr>
+                                    <th class="px-4 py-3">No.</th>
+                                    <th class="px-4 py-3">Countermeasure</th>
+                                    <th class="px-4 py-3">Department</th>
+                                    <th class="px-4 py-3">Type</th>
+                                    <th class="px-4 py-3">Priority</th>
+                                    <th class="px-4 py-3">Status</th>
+                                    <th class="px-4 py-3 w-32">Progress</th>
+                                    <th class="px-4 py-3">Target Date</th>
+                                </tr>
+                            </thead>
+                            <tbody id="table-body" class="divide-y divide-slate-100">
+                                <!-- Rows will be injected here via JS -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ================= FORM VIEW (DATA ENTRY) ================= -->
+            <div id="view-form" class="hide max-w-3xl mx-auto mt-4">
+                <div class="bg-white rounded-xl shadow-md border border-slate-200 overflow-hidden">
+                    <div class="bg-brand-dark text-white px-6 py-4 border-b border-slate-700 flex items-center gap-3">
+                        <i class="fa-solid fa-pen-to-square text-xl text-blue-400"></i>
+                        <h2 class="text-lg font-semibold tracking-wide">บันทึกงานแก้ไข (New Countermeasure)</h2>
+                    </div>
+                    
+                    <form id="projectForm" class="p-6 space-y-5" onsubmit="handleFormSubmit(event)">
+                        
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
+                            <div>
+                                <label class="block text-sm font-semibold text-slate-700 mb-1">Division <span class="text-red-500">*</span></label>
+                                <select id="f-division" required class="w-full rounded-md border border-slate-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-slate-50">
+                                    <option value="">-- เลือกฝ่ายงาน --</option>
+                                    <option value="ฝ่ายสินค้าหลักทอง">ฝ่ายสินค้าหลักทอง</option>
+                                    <option value="ตู้สินค้า Container">ตู้สินค้า Container</option>
+                                    <option value="Operation Support">Operation Support</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label class="block text-sm font-semibold text-slate-700 mb-1">Department <span class="text-red-500">*</span></label>
+                                <input type="text" id="f-department" required placeholder="เช่น WH-Stuffing, Yard" class="w-full rounded-md border border-slate-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-slate-50">
+                            </div>
+                        </div>
+
+                        <div>
+                            <label class="block text-sm font-semibold text-slate-700 mb-1">Countermeasure (ชื่องาน/การแก้ไข) <span class="text-red-500">*</span></label>
+                            <input type="text" id="f-countermeasure" required placeholder="ระบุสิ่งที่ต้องการแก้ไขหรือปรับปรุง" class="w-full rounded-md border border-slate-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-slate-50">
+                        </div>
+
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-5">
+                            <div>
+                                <label class="block text-sm font-semibold text-slate-700 mb-1">Type <span class="text-red-500">*</span></label>
+                                <select id="f-type" required class="w-full rounded-md border border-slate-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-slate-50">
+                                    <option value="Physical">Physical</option>
+                                    <option value="Systems">Systems</option>
+                                    <option value="Process">Process</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label class="block text-sm font-semibold text-slate-700 mb-1">Priority <span class="text-red-500">*</span></label>
+                                <select id="f-priority" required class="w-full rounded-md border border-slate-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-slate-50">
+                                    <option value="High">High</option>
+                                    <option value="Medium">Medium</option>
+                                    <option value="Low">Low</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label class="block text-sm font-semibold text-slate-700 mb-1">Target Date <span class="text-red-500">*</span></label>
+                                <input type="date" id="f-date" required class="w-full rounded-md border border-slate-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-slate-50">
+                            </div>
+                        </div>
+
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-5 border-t border-slate-100 pt-5 mt-2">
+                            <div>
+                                <label class="block text-sm font-semibold text-slate-700 mb-1">Responsible</label>
+                                <input type="text" id="f-responsible" placeholder="ระบุชื่อหรือทีม" class="w-full rounded-md border border-slate-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-slate-50">
+                            </div>
+                            <div>
+                                <label class="block text-sm font-semibold text-slate-700 mb-1">Status (สถานะเริ่มต้น)</label>
+                                <select id="f-status" class="w-full rounded-md border border-slate-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-slate-50">
+                                    <option value="Pending">Pending (รอดำเนินการ)</option>
+                                    <option value="In Progress">In Progress (กำลังทำ)</option>
+                                    <option value="Completed">Completed (เสร็จสิ้น)</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label class="block text-sm font-semibold text-slate-700 mb-1">Progress (%)</label>
+                                <input type="number" id="f-progress" min="0" max="100" value="0" class="w-full rounded-md border border-slate-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-slate-50">
+                            </div>
+                        </div>
+
+                        <div class="pt-4 flex gap-3 justify-end border-t border-slate-200 mt-6">
+                            <button type="button" onclick="document.getElementById('projectForm').reset()" class="px-5 py-2.5 rounded-md text-sm font-medium text-slate-600 hover:bg-slate-100 border border-slate-300 transition-colors">
+                                ล้างข้อมูล
+                            </button>
+                            <button type="submit" class="px-5 py-2.5 rounded-md text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 shadow-md hover:shadow-lg transition-all flex items-center gap-2">
+                                <i class="fa-solid fa-save"></i> บันทึกข้อมูล
+                            </button>
+                        </div>
+                    </form>
+                </div>
+                
+                <!-- Helper Notice -->
+                <div class="mt-4 text-center text-sm text-slate-500">
+                    <i class="fa-solid fa-info-circle mr-1"></i> เมื่อกดบันทึก ข้อมูลจะถูกนำไปประมวลผลและแสดงในหน้าแดชบอร์ดทันที
+                </div>
+            </div>
+
+        </div>
+    </main>
+
+    <!-- Toast Notification -->
+    <div id="toast" class="fixed top-20 right-4 bg-green-600 text-white px-6 py-3 rounded-lg shadow-lg flex items-center gap-3 z-50 hide">
+        <i class="fa-solid fa-circle-check text-xl"></i>
+        <div>
+            <h4 class="font-bold text-sm">สำเร็จ!</h4>
+            <p class="text-xs opacity-90">บันทึกข้อมูลโครงการใหม่เรียบร้อยแล้ว</p>
+        </div>
+    </div>
+
+    <!-- Application Logic -->
+    <script>
+        // --- 1. SUPABASE DATABASE CONFIGURATION ---
+        // ⚠️ กรุณานำ URL และ Anon Key จาก Supabase มาใส่ที่นี่ ⚠️
+        const SUPABASE_URL = 'ใส่_URL_ของ_Supabase_ที่นี่';
+        const SUPABASE_ANON_KEY = 'ใส่_Anon_Key_ที่นี่';
+        
+        // Initialize Supabase Client
+        let supabase;
+        try {
+            supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+        } catch (error) {
+            console.error("Supabase Initialization Error - ตรวจสอบว่าใส่ URL และ Key ถูกต้องหรือไม่");
+        }
+
+        let projects = [];
+        let statusChartInst = null;
+        let typeChartInst = null;
+        let deptChartInst = null;
+
+        // --- 2. LOAD DATA FROM SUPABASE ---
+        async function loadProjects() {
+            if (!SUPABASE_URL.startsWith('http')) {
+                console.log('Using mock data because Supabase config is empty.');
+                // Fallback mock data สำหรับกรณีที่ยังไม่ได้ใส่ Key
+                projects = [
+                    { id: 1, division: 'ฝ่ายสินค้าหลักทอง', countermeasure: 'Stuffing Station Upgrade', department: 'WH-Stuffing', type: 'Physical', priority: 'High', responsible: 'WH Team', status: 'Completed', progress: 100, target_date: '2025-05-15' },
+                    { id: 2, division: 'ตู้สินค้า Container', countermeasure: 'Gate Automation', department: 'Port', type: 'Systems', priority: 'High', responsible: 'IT Team', status: 'In Progress', progress: 20, target_date: '2025-11-30' }
+                ];
+                renderDashboard();
+                return;
+            }
+
+            try {
+                // ดึงข้อมูลจาก Table 'projects' เรียงจาก id ล่าสุดลงมา
+                const { data, error } = await supabase
+                    .from('projects')
+                    .select('*')
+                    .order('id', { ascending: false });
+
+                if (error) throw error;
+                
+                projects = data || [];
+                renderDashboard();
+            } catch (error) {
+                console.error('Error fetching data:', error.message);
+                alert('ไม่สามารถดึงข้อมูลจาก Database ได้: ' + error.message);
+            }
+        }
+
+        // --- 3. UI NAVIGATION LOGIC ---
+        function switchTab(tabId) {
+            const viewDashboard = document.getElementById('view-dashboard');
+            const viewForm = document.getElementById('view-form');
+            const btnDashboard = document.getElementById('btn-nav-dashboard');
+            const btnForm = document.getElementById('btn-nav-form');
+
+            if (tabId === 'dashboard') {
+                viewDashboard.classList.remove('hide');
+                viewForm.classList.add('hide');
+                btnDashboard.className = "bg-brand-blue hover:bg-blue-800 text-white px-4 py-2 rounded-md text-sm font-medium transition-colors border border-blue-700 shadow-inner";
+                btnForm.className = "hover:bg-slate-800 text-slate-300 hover:text-white px-4 py-2 rounded-md text-sm font-medium transition-colors border border-transparent";
+                renderDashboard();
+            } else {
+                viewDashboard.classList.add('hide');
+                viewForm.classList.remove('hide');
+                btnForm.className = "bg-brand-blue hover:bg-blue-800 text-white px-4 py-2 rounded-md text-sm font-medium transition-colors border border-blue-700 shadow-inner";
+                btnDashboard.className = "hover:bg-slate-800 text-slate-300 hover:text-white px-4 py-2 rounded-md text-sm font-medium transition-colors border border-transparent";
+            }
+        }
+
+        function showToast() {
+            const toast = document.getElementById('toast');
+            toast.classList.remove('hide');
+            toast.classList.remove('toast-leave');
+            toast.classList.add('toast-enter');
+            
+            setTimeout(() => {
+                toast.classList.remove('toast-enter');
+                toast.classList.add('toast-leave');
+                setTimeout(() => toast.classList.add('hide'), 300);
+            }, 3000);
+        }
+
+        // --- 4. FORM HANDLING (Insert to Supabase) ---
+        async function handleFormSubmit(e) {
+            e.preventDefault();
+            
+            const submitBtn = e.target.querySelector('button[type="submit"]');
+            const originalBtnHtml = submitBtn.innerHTML;
+            submitBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> กำลังบันทึก...';
+            submitBtn.disabled = true;
+            
+            const newData = {
+                division: document.getElementById('f-division').value,
+                department: document.getElementById('f-department').value,
+                countermeasure: document.getElementById('f-countermeasure').value,
+                type: document.getElementById('f-type').value,
+                priority: document.getElementById('f-priority').value,
+                target_date: document.getElementById('f-date').value, // match SQL column name
+                responsible: document.getElementById('f-responsible').value || 'Unassigned',
+                status: document.getElementById('f-status').value,
+                progress: parseInt(document.getElementById('f-progress').value) || 0
+            };
+
+            if (!SUPABASE_URL.startsWith('http')) {
+                // Mock behavior if no DB connected
+                newData.id = projects.length > 0 ? Math.max(...projects.map(p => p.id || 0)) + 1 : 1;
+                projects.unshift(newData);
+                finishSubmission(submitBtn, originalBtnHtml);
+                return;
+            }
+
+            try {
+                // Insert into Supabase
+                const { data, error } = await supabase
+                    .from('projects')
+                    .insert([newData])
+                    .select();
+
+                if (error) throw error;
+
+                // Add newly inserted data (with generated ID) to local state
+                if (data && data.length > 0) {
+                    projects.unshift(data[0]);
+                }
+                
+                finishSubmission(submitBtn, originalBtnHtml);
+            } catch (error) {
+                console.error('Insert error:', error.message);
+                alert('เกิดข้อผิดพลาดในการบันทึก: ' + error.message);
+                submitBtn.innerHTML = originalBtnHtml;
+                submitBtn.disabled = false;
+            }
+        }
+
+        function finishSubmission(btn, originalHtml) {
+            btn.innerHTML = originalHtml;
+            btn.disabled = false;
+            document.getElementById('projectForm').reset();
+            showToast();
+            setTimeout(() => {
+                switchTab('dashboard');
+            }, 1000);
+        }
+
+        // --- 5. DASHBOARD RENDERING LOGIC ---
+        function renderDashboard() {
+            updateKPIs();
+            renderTable();
+            renderCharts();
+            
+            const now = new Date();
+            document.getElementById('last-update').innerText = now.getHours().toString().padStart(2, '0') + ':' + now.getMinutes().toString().padStart(2, '0');
+        }
+
+        function updateKPIs() {
+            const total = projects.length;
+            const completed = projects.filter(p => p.status === 'Completed').length;
+            const inProgress = projects.filter(p => p.status === 'In Progress').length;
+            const pending = projects.filter(p => p.status === 'Pending').length;
+
+            animateValue("kpi-total", 0, total, 500);
+            animateValue("kpi-completed", 0, completed, 500);
+            animateValue("kpi-progress", 0, inProgress, 500);
+            animateValue("kpi-pending", 0, pending, 500);
+        }
+
+        function renderTable() {
+            const tbody = document.getElementById('table-body');
+            tbody.innerHTML = '';
+
+            projects.slice(0, 10).forEach((p, index) => {
+                let statusBg = 'bg-slate-100 text-slate-800';
+                if(p.status === 'Completed') statusBg = 'bg-green-100 text-green-800';
+                if(p.status === 'In Progress') statusBg = 'bg-yellow-100 text-yellow-800';
+                if(p.status === 'Pending') statusBg = 'bg-red-100 text-red-800';
+
+                let prioColor = 'text-slate-500';
+                if(p.priority === 'High') prioColor = 'text-red-600 font-bold';
+                if(p.priority === 'Medium') prioColor = 'text-yellow-600 font-semibold';
+                if(p.priority === 'Low') prioColor = 'text-green-600';
+
+                let progColor = 'bg-blue-500';
+                if(p.progress === 100) progColor = 'bg-green-500';
+                else if(p.progress === 0) progColor = 'bg-slate-300';
+                else if(p.progress < 50) progColor = 'bg-yellow-500';
+
+                const tr = document.createElement('tr');
+                tr.className = "hover:bg-slate-50 transition-colors";
+                tr.innerHTML = `
+                    <td class="px-4 py-3 font-medium text-slate-900">${index + 1}</td>
+                    <td class="px-4 py-3">
+                        <div class="font-medium text-blue-700">${p.countermeasure}</div>
+                        <div class="text-xs text-slate-500">${p.division}</div>
+                    </td>
+                    <td class="px-4 py-3 text-slate-600">${p.department}</td>
+                    <td class="px-4 py-3 text-slate-600">${p.type}</td>
+                    <td class="px-4 py-3 ${prioColor}">${p.priority}</td>
+                    <td class="px-4 py-3">
+                        <span class="px-2.5 py-1 rounded-full text-xs font-medium ${statusBg}">
+                            ${p.status}
+                        </span>
+                    </td>
+                    <td class="px-4 py-3">
+                        <div class="flex items-center gap-2">
+                            <div class="w-full bg-slate-200 rounded-full h-2">
+                                <div class="${progColor} h-2 rounded-full" style="width: ${p.progress}%"></div>
+                            </div>
+                            <span class="text-xs font-semibold w-8 text-right">${p.progress}%</span>
+                        </div>
+                    </td>
+                    <td class="px-4 py-3 text-slate-600">${formatDate(p.target_date)}</td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+
+        // --- 6. CHART.JS IMPLEMENTATION ---
+        function renderCharts() {
+            Chart.defaults.font.family = "'Sarabun', sans-serif";
+            
+            const statusCounts = {
+                'Completed': projects.filter(p=>p.status==='Completed').length,
+                'In Progress': projects.filter(p=>p.status==='In Progress').length,
+                'Pending': projects.filter(p=>p.status==='Pending').length
+            };
+            if(statusChartInst) statusChartInst.destroy();
+            statusChartInst = new Chart(document.getElementById('statusChart').getContext('2d'), {
+                type: 'doughnut',
+                data: {
+                    labels: Object.keys(statusCounts),
+                    datasets: [{ data: Object.values(statusCounts), backgroundColor: ['#22c55e', '#eab308', '#ef4444'], borderWidth: 0, hoverOffset: 4 }]
+                },
+                options: { responsive: true, maintainAspectRatio: false, cutout: '70%', plugins: { legend: { position: 'right', labels: { usePointStyle: true, boxWidth: 8 } } } }
+            });
+
+            const typeCounts = {
+                'Systems': projects.filter(p=>p.type==='Systems').length,
+                'Process': projects.filter(p=>p.type==='Process').length,
+                'Physical': projects.filter(p=>p.type==='Physical').length
+            };
+            if(typeChartInst) typeChartInst.destroy();
+            typeChartInst = new Chart(document.getElementById('typeChart').getContext('2d'), {
+                type: 'doughnut',
+                data: {
+                    labels: Object.keys(typeCounts),
+                    datasets: [{ data: Object.values(typeCounts), backgroundColor: ['#3b82f6', '#f97316', '#8b5cf6'], borderWidth: 0, hoverOffset: 4 }]
+                },
+                options: { responsive: true, maintainAspectRatio: false, cutout: '70%', plugins: { legend: { position: 'right', labels: { usePointStyle: true, boxWidth: 8 } } } }
+            });
+
+            const deptObj = {};
+            projects.forEach(p => { deptObj[p.department] = (deptObj[p.department] || 0) + 1; });
+            const sortedDepts = Object.keys(deptObj).sort((a,b) => deptObj[b] - deptObj[a]).slice(0, 5);
+            const deptData = sortedDepts.map(d => deptObj[d]);
+
+            if(deptChartInst) deptChartInst.destroy();
+            deptChartInst = new Chart(document.getElementById('deptChart').getContext('2d'), {
+                type: 'bar',
+                data: {
+                    labels: sortedDepts,
+                    datasets: [{ label: 'Projects', data: deptData, backgroundColor: '#1e3a8a', borderRadius: 4 }]
+                },
+                options: {
+                    indexAxis: 'y', responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } },
+                    scales: { x: { beginAtZero: true, grid: { display: false }, ticks: { stepSize: 1 } }, y: { grid: { display: false } } }
+                }
+            });
+        }
+
+        // --- UTILS ---
+        function formatDate(dateStr) {
+            if(!dateStr) return '-';
+            const d = new Date(dateStr);
+            return `${d.getDate().toString().padStart(2,'0')}/${(d.getMonth()+1).toString().padStart(2,'0')}/${d.getFullYear()}`;
+        }
+
+        function animateValue(id, start, end, duration) {
+            if (start === end) { document.getElementById(id).innerHTML = end; return; }
+            let range = end - start; let current = start; let increment = end > start ? 1 : -1;
+            let stepTime = Math.abs(Math.floor(duration / (range === 0 ? 1 : range)));
+            let obj = document.getElementById(id);
+            let timer = setInterval(function() {
+                current += increment; obj.innerHTML = current;
+                if (current == end) clearInterval(timer);
+            }, stepTime);
+        }
+
+        // Initialize App
+        window.onload = () => {
+            loadProjects(); // จะทำการโหลดข้อมูลจาก DB ทันทีเมื่อเปิดหน้าเว็บ
+        };
+    </script>
+</body>
+</html>
