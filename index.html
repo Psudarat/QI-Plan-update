@@ -162,7 +162,7 @@
                     </div>
                 </div>
 
-                <!-- Charts Row 2: Priority, Top 3 CM, Dept/Div Table -->
+                <!-- Charts Row 2: Priority, Top 3 CM, Projects Due Soon -->
                 <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
                     <div class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden flex flex-col">
                         <div class="bg-brand-dark text-white px-4 py-2 text-sm font-semibold text-center">PRIORITY LEVEL</div>
@@ -174,9 +174,10 @@
                             <!-- Injected via JS -->
                         </div>
                     </div>
+                    <!-- New Projects Due Soon Widget -->
                     <div class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden flex flex-col">
-                        <div class="bg-brand-dark text-white px-4 py-2 text-sm font-semibold text-center">DEPT. & DIV. SUMMARY</div>
-                        <div class="flex-1 overflow-y-auto" id="top-dept-div">
+                        <div class="bg-brand-dark text-white px-4 py-2 text-sm font-semibold text-center">PROJECTS DUE SOON</div>
+                        <div class="flex-1 overflow-y-auto p-4" id="projects-due-soon">
                             <!-- Injected via JS -->
                         </div>
                     </div>
@@ -246,6 +247,7 @@
                                     <option value="Document ICD">Document ICD</option>
                                     <option value="CFS">CFS</option>
                                     <option value="Quality Assurance (QA)">Quality Assurance (QA)</option>
+                                    <option value="อื่นๆ (Other)">อื่นๆ (Other)</option>
                                 </select>
                             </div>
                             <div>
@@ -257,10 +259,12 @@
                                 <select id="f-division" required class="w-full rounded-md border border-slate-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-slate-50">
                                     <option value="">-- เลือก Div. --</option>
                                     <option value="ฝ่ายสินค้าเทกอง">ฝ่ายสินค้าเทกอง</option>
+                                    <option value="ฝ่ายสินค้าหลักทอง">ฝ่ายสินค้าหลักทอง</option>
                                     <option value="ตู้สินค้า Container">ตู้สินค้า Container</option>
                                     <option value="Conventional">Conventional</option>
                                     <option value="Operation Support">Operation Support</option>
                                     <option value="Back Office">Back Office</option>
+                                    <option value="อื่นๆ (Other)">อื่นๆ (Other)</option>
                                 </select>
                             </div>
                             <div>
@@ -441,8 +445,8 @@
 
     <script>
         // --- 1. SUPABASE DATABASE CONFIGURATION ---
-        const SUPABASE_URL = 'https://lfyqxpodnmunwjrprkgq.supabase.co';
-        const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImxmeXF4cG9kbm11bndqcnBya2dxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzgyMjExMTMsImV4cCI6MjA5Mzc5NzExM30.5O1kWomBSbSRsYv0UgbwgY883wH20sH90whoUliS3Po';
+        const SUPABASE_URL = 'ใส่_URL_ของ_Supabase_ที่นี่';
+        const SUPABASE_ANON_KEY = 'ใส่_Anon_Key_ที่นี่';
         
         let supabaseClient;
         try {
@@ -515,23 +519,19 @@
         // --- 2. LOAD DATA ---
         async function loadProjects() {
             if (!SUPABASE_URL.startsWith('http')) {
-                // Mock data (updated division name to match mapping)
+                // Mock data
                 projects = [
                     { 
                         id: 1, division: 'ฝ่ายสินค้าเทกอง', countermeasure: 'ศึกษา Concept ร่วมกับทีมงาน', department: 'WH-Stuffing', 
                         type: 'Physical', priority: 'High', name_owner: 'Sathaporn', status: 'In Progress', progress: 50,
-                        start_date: '2026-06-08', end_date: '2026-11-15',
-                        activities: [
-                            { id: 101, name: '1.ศึกษา Concept ร่วมกับ...', owner: 'Sathaporn...', pStart: '2026-06-08', pEnd: '2026-07-06', aStart: '2026-06-08', aEnd: '2026-06-25', progress: 50, updated: '08/04/26' },
-                            { id: 102, name: '2.Design Microsoft ...', owner: 'Sathaporn...', pStart: '2026-07-07', pEnd: '2026-08-07', aStart: '2026-07-07', aEnd: '2026-07-20', progress: 50, updated: '08/04/26' },
-                            { id: 103, name: '3.จัดทำคำถามเกี่ยวกับ...', owner: 'Sathaporn...', pStart: '2026-08-08', pEnd: '2026-10-10', aStart: '2026-08-08', aEnd: '2026-08-30', progress: 10, updated: '08/04/26' },
-                            { id: 104, name: '4.ทดลอง Demo ใช้งาน...', owner: 'Sathaporn...', pStart: '2026-10-11', pEnd: '2026-11-15', aStart: '', aEnd: '', progress: 0, updated: '08/04/26' }
-                        ] 
+                        start_date: '2026-06-08', end_date: '2026-06-15',
+                        activities: [] 
                     },
-                    { id: 2, division: 'ตู้สินค้า Container', countermeasure: 'ศึกษา Concept ร่วมกับทีมงาน', department: 'Port', type: 'Systems', priority: 'High', name_owner: 'IT Team', status: 'Pending', progress: 0, start_date: '2026-07-01', end_date: '2026-12-31', activities: [] },
-                    { id: 3, division: 'Operation Support', countermeasure: 'ปรับปรุงกระบวนการทำงาน', department: 'Yard', type: 'Process', priority: 'Medium', name_owner: 'Op Team', status: 'Completed', progress: 100, start_date: '2026-01-01', end_date: '2026-03-31', activities: [] },
-                    { id: 4, division: 'ฝ่ายสินค้าเทกอง', countermeasure: 'ศึกษา Concept ร่วมกับทีมงาน', department: 'Engineer', type: 'Physical', priority: 'Low', name_owner: 'Eng Team', status: 'Pending', progress: 0, start_date: '2026-08-01', end_date: '2026-10-31', activities: [] },
-                    { id: 5, division: 'ตู้สินค้า Container', countermeasure: 'ติดตั้งระบบ CCTV ใหม่', department: 'External Transport', type: 'Systems', priority: 'Medium', name_owner: 'Sec Team', status: 'In Progress', progress: 40, start_date: '2026-05-01', end_date: '2026-09-30', activities: [] }
+                    { id: 2, division: 'ตู้สินค้า Container', countermeasure: 'Flood Incidents', department: 'WH Sugar', type: 'Systems', priority: 'High', name_owner: 'IT Team', status: 'Pending', progress: 0, start_date: '2026-05-01', end_date: '2026-05-25', activities: [] },
+                    { id: 3, division: 'Operation Support', countermeasure: 'Pre-Sling control (Loss and Damage)', department: 'WH Sugar', type: 'Process', priority: 'Medium', name_owner: 'Op Team', status: 'Pending', progress: 0, start_date: '2026-01-01', end_date: '2026-05-30', activities: [] },
+                    { id: 4, division: 'ฝ่ายสินค้าเทกอง', countermeasure: 'Incorrect loading', department: 'Ship', type: 'Physical', priority: 'Low', name_owner: 'Eng Team', status: 'Pending', progress: 0, start_date: '2026-08-01', end_date: '2026-06-05', activities: [] },
+                    { id: 5, division: 'ตู้สินค้า Container', countermeasure: 'Product damage', department: 'Port', type: 'Systems', priority: 'Medium', name_owner: 'Sec Team', status: 'In Progress', progress: 40, start_date: '2026-05-01', end_date: '2026-06-10', activities: [] },
+                    { id: 6, division: 'ตู้สินค้า Container', countermeasure: 'DAR Module', department: 'Quality Assurance (QA)', type: 'Systems', priority: 'High', name_owner: 'QA Team', status: 'Pending', progress: 0, start_date: '2026-05-01', end_date: '2026-06-15', activities: [] }
                 ];
                 recalculateProjectProgresses();
                 populateFilters();
@@ -1100,29 +1100,64 @@
             cmHtml += `</tbody></table>`;
             document.getElementById('top-countermeasures').innerHTML = cmHtml;
 
-            // 6. Render Dept & Div Summary
-            const deptDivObj = {}; 
-            data.forEach(p => { 
-                if (p.department.trim() !== '' && p.division.trim() !== '') {
-                    const key = `${p.department}|${p.division}`;
-                    deptDivObj[key] = (deptDivObj[key] || 0) + 1; 
-                }
-            });
-            const topDeptDiv = Object.keys(deptDivObj).map(k => {
-                const [dept, div] = k.split('|');
-                return {dept, div, count: deptDivObj[k]};
-            }).sort((a,b) => b.count - a.count).slice(0, 5); // Show top 5
+            // 6. Render Projects Due Soon (Replacing Dept & Div Summary)
+            const today = new Date();
+            today.setHours(0,0,0,0); // ตั้งค่าเวลาเริ่มต้นของวันเพื่อคำนวณให้แม่นยำ
 
-            let ddHtml = `<table class="w-full text-xs text-left"><thead class="bg-slate-50 text-slate-500 border-b border-slate-200"><tr><th class="py-2 px-3">Dept.</th><th class="py-2 px-3">Div.</th><th class="py-2 px-3 text-center">Count</th></tr></thead><tbody class="divide-y divide-slate-100">`;
-            if(topDeptDiv.length === 0) {
-                ddHtml += `<tr><td colspan="3" class="py-6 text-center text-slate-400 italic">No data available</td></tr>`;
+            // ดึงเฉพาะโปรเจกต์ที่ยังไม่เสร็จและมีวัน End Date
+            let dueProjects = data.filter(p => p.status !== 'Completed' && p.end_date);
+
+            // คำนวณวันคงเหลือ (Days left)
+            dueProjects = dueProjects.map(p => {
+                const endDate = new Date(p.end_date);
+                const diffTime = endDate.getTime() - today.getTime();
+                const daysLeft = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+                return { ...p, daysLeft, parsedEndDate: endDate };
+            });
+
+            // เรียงลำดับจากวันที่ใกล้จะถึงกำหนดที่สุด (จากน้อยไปมาก)
+            dueProjects.sort((a, b) => a.daysLeft - b.daysLeft);
+
+            // เอาแค่ 5 อันดับแรก
+            const top5Due = dueProjects.slice(0, 5);
+
+            let dueHtml = `<div class="space-y-4">`;
+            if (top5Due.length === 0) {
+                dueHtml += `<div class="text-center text-slate-400 italic py-4">No upcoming deadlines</div>`;
             } else {
-                topDeptDiv.forEach(d => {
-                    ddHtml += `<tr class="hover:bg-slate-50 transition-colors"><td class="py-2.5 px-3 font-bold text-slate-700">${d.dept}</td><td class="py-2.5 px-3 text-slate-500 truncate max-w-[100px]" title="${d.div}">${d.div}</td><td class="py-2.5 px-3 text-center font-bold text-brand-blue">${d.count}</td></tr>`;
+                top5Due.forEach(p => {
+                    // กำหนดสีจุดตามความเร่งด่วน
+                    let dotColor = 'bg-purple-500'; // ปกติ (เหลือมากกว่า 30 วัน)
+                    if (p.daysLeft <= 7) dotColor = 'bg-red-500'; // ด่วนมาก หรือ เกินกำหนด
+                    else if (p.daysLeft <= 30) dotColor = 'bg-yellow-400'; // ด่วนปานกลาง
+
+                    // จัดรูปแบบวันที่ (DD/MM/YYYY)
+                    const dateStr = `${p.parsedEndDate.getDate().toString().padStart(2, '0')}/${(p.parsedEndDate.getMonth() + 1).toString().padStart(2, '0')}/${p.parsedEndDate.getFullYear()}`;
+                    
+                    // จัดข้อความวันคงเหลือ
+                    let daysText = `${p.daysLeft} days left`;
+                    if (p.daysLeft < 0) daysText = `<span class="text-red-500 font-bold">Overdue ${Math.abs(p.daysLeft)} days</span>`;
+                    else if (p.daysLeft === 0) daysText = `<span class="text-orange-500 font-bold">Due today!</span>`;
+
+                    dueHtml += `
+                        <div class="flex items-start gap-3 border-b border-slate-100 pb-3 last:border-0 last:pb-0">
+                            <div class="w-3.5 h-3.5 rounded-full mt-1 shrink-0 ${dotColor}"></div>
+                            <div class="flex-1 min-w-0">
+                                <div class="flex justify-between items-start">
+                                    <h4 class="text-[13px] font-semibold text-slate-700 leading-tight pr-2 truncate" title="${p.countermeasure}">${p.countermeasure}</h4>
+                                    <span class="text-[13px] font-bold text-slate-800 whitespace-nowrap">${dateStr}</span>
+                                </div>
+                                <div class="flex justify-between items-center mt-0.5">
+                                    <span class="text-[11px] text-slate-500">${p.department}</span>
+                                    <span class="text-[12px] font-medium text-slate-600 whitespace-nowrap">${daysText}</span>
+                                </div>
+                            </div>
+                        </div>
+                    `;
                 });
             }
-            ddHtml += `</tbody></table>`;
-            document.getElementById('top-dept-div').innerHTML = ddHtml;
+            dueHtml += `</div>`;
+            document.getElementById('projects-due-soon').innerHTML = dueHtml;
         }
 
         // --- UTILS ---
