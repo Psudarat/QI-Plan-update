@@ -9,16 +9,20 @@
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
-    <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Sarabun:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     
     <script>
         tailwind.config = {
             theme: {
                 extend: {
-                    fontFamily: { sans: ['Sarabun', 'sans-serif'] },
+                    fontFamily: { 
+                        sans: ['Sarabun', 'sans-serif'],
+                        inter: ['Inter', 'sans-serif']
+                    },
                     colors: {
                         brand: { dark: '#0f172a', blue: '#1e3a8a', light: '#f8fafc' },
-                        status: { completed: '#22c55e', progress: '#eab308', pending: '#ef4444' }
+                        status: { completed: '#22c55e', progress: '#eab308', pending: '#ef4444' },
+                        tl: { blue: '#5a8dee', yellow: '#ffc107', textdark: '#422d00' }
                     }
                 }
             }
@@ -33,50 +37,34 @@
         @keyframes slideOutRight { from { transform: translateX(0); opacity: 1; } to { transform: translateX(100%); opacity: 0; } }
         
         /* Custom Scrollbar */
-        ::-webkit-scrollbar { width: 8px; height: 8px; }
-        ::-webkit-scrollbar-track { background: #f1f1f1; }
+        ::-webkit-scrollbar { width: 6px; height: 8px; }
+        ::-webkit-scrollbar-track { background: #f8fafc; }
         ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
         ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
 
-        /* Timeline Grid Styles */
-        .timeline-grid {
-            display: grid;
-            grid-template-columns: minmax(400px, 1fr) auto;
-            min-height: 400px;
+        /* Timeline Advanced Styles */
+        .tl-row:hover { background-color: #f8fafc; }
+        .tl-bar-plan {
+            position: absolute; top: 12px; height: 10px; border-radius: 999px;
+            background-color: #5a8dee;
         }
-        .timeline-header-cell {
-            border-right: 1px solid #e2e8f0;
-            border-bottom: 1px solid #e2e8f0;
-            text-align: center;
-            font-size: 0.75rem;
-            font-weight: 600;
-            color: #64748b;
+        .tl-bar-act {
+            position: absolute; top: 26px; height: 10px; border-radius: 999px;
+            background-image: linear-gradient(90deg, #ffc107, #ffcd38);
+            box-shadow: 0 1px 3px rgba(255,193,7,0.4);
+            display: flex; align-items: center; padding-left: 6px;
+            font-size: 8px; font-weight: 800; color: #785a00;
+            overflow: visible; white-space: nowrap; font-family: 'Inter', sans-serif;
         }
-        .timeline-cell {
-            border-right: 1px solid #f1f5f9;
-            border-bottom: 1px solid #e2e8f0;
-            height: 48px;
-            position: relative;
+
+        /* Input Date customization to look clean */
+        input[type="date"]::-webkit-calendar-picker-indicator {
+            cursor: pointer;
+            opacity: 0.6;
+            transition: 0.2s;
         }
-        .timeline-bar-plan {
-            height: 8px;
-            background-color: #60a5fa; /* blue-400 */
-            border-radius: 4px;
-            position: absolute;
-            top: 10px;
-            left: 2px;
-            right: 2px;
-            z-index: 10;
-        }
-        .timeline-bar-act {
-            height: 8px;
-            background-color: #22c55e; /* green-500 */
-            border-radius: 4px;
-            position: absolute;
-            top: 24px;
-            left: 2px;
-            right: 2px;
-            z-index: 10;
+        input[type="date"]::-webkit-calendar-picker-indicator:hover {
+            opacity: 1;
         }
     </style>
 </head>
@@ -112,6 +100,34 @@
             <!-- ================= DASHBOARD VIEW ================= -->
             <div id="view-dashboard" class="space-y-6">
                 
+                <!-- Filter Section -->
+                <div class="bg-white p-4 rounded-xl shadow-sm border border-slate-200 flex flex-wrap gap-4 items-end">
+                    <div class="flex-1 min-w-[200px]">
+                        <label class="block text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1">Status Overview</label>
+                        <select id="filter-status" onchange="renderDashboard()" class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-blue bg-slate-50 text-slate-700 font-medium">
+                            <option value="All">All</option>
+                            <option value="Completed">Completed</option>
+                            <option value="In Progress">In Progress</option>
+                            <option value="Pending">Pending</option>
+                        </select>
+                    </div>
+                    <div class="flex-1 min-w-[200px]">
+                        <label class="block text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1">Type Breakdown</label>
+                        <select id="filter-type" onchange="renderDashboard()" class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-blue bg-slate-50 text-slate-700 font-medium">
+                            <option value="All">All</option>
+                            <option value="Physical">Physical</option>
+                            <option value="Systems">Systems</option>
+                            <option value="Process">Process</option>
+                        </select>
+                    </div>
+                    <div class="flex-1 min-w-[200px]">
+                        <label class="block text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1">Department</label>
+                        <select id="filter-department" onchange="renderDashboard()" class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-blue bg-slate-50 text-slate-700 font-medium">
+                            <option value="All">All</option>
+                        </select>
+                    </div>
+                </div>
+
                 <!-- KPI Cards -->
                 <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
                     <div class="bg-brand-dark text-white rounded-xl shadow-sm p-4 flex items-center justify-between border-l-4 border-slate-500">
@@ -162,9 +178,15 @@
 
                 <!-- Table Section -->
                 <div class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
-                    <div class="bg-brand-dark text-white px-4 py-3 text-sm font-semibold flex justify-between items-center">
+                    <div class="bg-brand-dark text-white px-4 py-3 text-sm font-semibold flex flex-wrap justify-between items-center gap-3">
                         <span>PROJECT LIST</span>
-                        <span class="text-xs bg-white/20 px-2 py-1 rounded">อัปเดตล่าสุด: <span id="last-update">ตอนนี้</span></span>
+                        <div class="flex items-center gap-3">
+                            <div class="relative">
+                                <i class="fa-solid fa-search absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-400 text-xs"></i>
+                                <input type="text" id="search-countermeasure" onkeyup="renderDashboard()" placeholder="ค้นหา Countermeasure..." class="pl-8 pr-3 py-1.5 text-slate-800 rounded-md text-xs focus:outline-none focus:ring-2 focus:ring-blue-400 w-48 sm:w-64 border-none shadow-inner">
+                            </div>
+                            <span class="text-[10px] bg-white/20 px-2 py-1 rounded hidden sm:inline-block whitespace-nowrap">อัปเดตล่าสุด: <span id="last-update">ตอนนี้</span></span>
+                        </div>
                     </div>
                     <div class="overflow-x-auto">
                         <table class="w-full text-sm text-left">
@@ -173,6 +195,7 @@
                                     <th class="px-4 py-3">Countermeasure</th>
                                     <th class="px-4 py-3">Dept. / Div.</th>
                                     <th class="px-4 py-3">Type / Priority</th>
+                                    <th class="px-4 py-3">Timeline</th>
                                     <th class="px-4 py-3">Status</th>
                                     <th class="px-4 py-3 w-32">Progress</th>
                                     <th class="px-4 py-3 text-center">Actions</th>
@@ -197,26 +220,20 @@
                     <form id="projectForm" class="p-6" onsubmit="handleFormSubmit(event)">
                         <input type="hidden" id="f-id">
                         
-                        <!-- 1. Countermeasure -->
                         <div class="mb-5">
                             <label class="block text-sm font-semibold text-slate-700 mb-1">1. Countermeasure <span class="text-red-500">*</span></label>
                             <input type="text" id="f-countermeasure" required placeholder="ระบุชื่องานหรือสิ่งที่ต้องการแก้ไข" class="w-full rounded-md border border-slate-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-slate-50">
                         </div>
 
-                        <!-- Grid Section -->
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-5 mb-5">
-                            <!-- 2. Dept. -->
                             <div>
                                 <label class="block text-sm font-semibold text-slate-700 mb-1">2. Dept. <span class="text-red-500">*</span></label>
                                 <input type="text" id="f-department" required placeholder="เช่น WH-Stuffing" class="w-full rounded-md border border-slate-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-slate-50">
                             </div>
-                            <!-- 3. Name Owner -->
                             <div>
                                 <label class="block text-sm font-semibold text-slate-700 mb-1">3. Name Owner <span class="text-red-500">*</span></label>
                                 <input type="text" id="f-name-owner" required placeholder="ระบุชื่อผู้รับผิดชอบ" class="w-full rounded-md border border-slate-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-slate-50">
                             </div>
-                            
-                            <!-- 4. Div. -->
                             <div>
                                 <label class="block text-sm font-semibold text-slate-700 mb-1">4. Div. <span class="text-red-500">*</span></label>
                                 <select id="f-division" required class="w-full rounded-md border border-slate-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-slate-50">
@@ -226,7 +243,6 @@
                                     <option value="Operation Support">Operation Support</option>
                                 </select>
                             </div>
-                            <!-- 5. Type -->
                             <div>
                                 <label class="block text-sm font-semibold text-slate-700 mb-1">5. Type <span class="text-red-500">*</span></label>
                                 <select id="f-type" required class="w-full rounded-md border border-slate-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-slate-50">
@@ -236,8 +252,6 @@
                                     <option value="Process">Process</option>
                                 </select>
                             </div>
-
-                            <!-- 6. Priority -->
                             <div>
                                 <label class="block text-sm font-semibold text-slate-700 mb-1">6. Priority <span class="text-red-500">*</span></label>
                                 <select id="f-priority" required class="w-full rounded-md border border-slate-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-slate-50">
@@ -246,7 +260,6 @@
                                     <option value="Low">Low</option>
                                 </select>
                             </div>
-                            <!-- 9. Status -->
                             <div>
                                 <label class="block text-sm font-semibold text-slate-700 mb-1">7. Status</label>
                                 <select id="f-status" class="w-full rounded-md border border-slate-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-slate-50">
@@ -255,9 +268,16 @@
                                     <option value="Completed">Completed</option>
                                 </select>
                             </div>
+                            <div>
+                                <label class="block text-sm font-semibold text-slate-700 mb-1">8. Start Date</label>
+                                <input type="date" id="f-project-start" class="w-full rounded-md border border-slate-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-slate-50">
+                            </div>
+                            <div>
+                                <label class="block text-sm font-semibold text-slate-700 mb-1">9. End Date</label>
+                                <input type="date" id="f-project-end" class="w-full rounded-md border border-slate-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-slate-50">
+                            </div>
                         </div>
 
-                        <!-- Buttons -->
                         <div class="pt-4 flex gap-3 justify-end border-t border-slate-200 mt-6">
                             <button type="button" onclick="cancelEdit()" class="px-5 py-2.5 rounded-md text-sm font-medium text-slate-600 hover:bg-slate-100 border border-slate-300 transition-colors">
                                 ยกเลิก / ล้างข้อมูล
@@ -273,89 +293,141 @@
         </div>
     </main>
 
-    <!-- ================= TIMELINE MODAL ================= -->
-    <div id="timeline-modal" class="fixed inset-0 bg-slate-900/80 z-50 hide flex flex-col p-4 sm:p-6">
-        <div class="bg-white flex-1 rounded-xl shadow-2xl flex flex-col overflow-hidden max-w-full w-full mx-auto">
+    <!-- ================= ADVANCED TIMELINE MODAL ================= -->
+    <div id="timeline-modal" class="fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-40 hide flex flex-col p-2 sm:p-6">
+        <div class="bg-white flex-1 rounded-xl shadow-2xl flex flex-col overflow-hidden max-w-[1400px] w-full mx-auto border border-slate-300">
             <!-- Modal Header -->
-            <div class="flex justify-between items-center p-4 border-b border-slate-200 bg-slate-50">
+            <div class="flex justify-between items-center px-6 py-4 border-b border-slate-200 bg-white">
                 <div class="flex items-center gap-3">
-                    <button onclick="closeTimeline()" class="text-slate-400 hover:text-slate-600"><i class="fa-solid fa-xmark text-xl"></i></button>
-                    <h2 class="text-xl font-bold text-brand-dark"><i class="fa-solid fa-list-check text-blue-600 mr-2"></i> Timeline & Activities</h2>
-                    <span id="tl-project-name" class="ml-2 px-3 py-1 bg-slate-200 text-slate-700 rounded-full text-sm font-medium"></span>
+                    <button onclick="closeTimeline()" class="text-slate-400 hover:text-slate-700 transition-colors"><i class="fa-solid fa-arrow-left text-xl"></i></button>
+                    <h2 class="text-xl font-bold text-brand-dark flex items-center font-inter"><i class="fa-solid fa-list-ul text-blue-500 mr-3"></i> Timeline & Activities</h2>
+                    <span id="tl-project-name" class="ml-3 px-3 py-1 bg-slate-100 text-slate-600 rounded-full text-xs font-semibold hidden sm:inline-block border border-slate-200"></span>
                 </div>
-                <button onclick="openActivityForm()" class="bg-brand-dark hover:bg-slate-800 text-white px-4 py-2 rounded-md text-sm font-medium transition-colors">
-                    <i class="fa-solid fa-plus mr-1"></i> Add Activity
+                <button onclick="openActivityForm()" class="bg-brand-dark hover:bg-slate-800 text-white px-4 py-2 rounded-lg text-sm font-semibold transition-colors flex items-center gap-2 font-inter shadow-md">
+                    <i class="fa-solid fa-plus"></i> Add Activity
                 </button>
             </div>
             
-            <!-- Timeline Body (Grid) -->
-            <div class="flex-1 overflow-auto bg-white relative">
-                <div class="timeline-grid" id="timeline-container">
-                    <!-- Injected via JS -->
+            <!-- Timeline Body Layout -->
+            <div class="flex-1 overflow-auto bg-white flex relative font-inter" id="timeline-scroll-area">
+                <!-- Left Fixed Table -->
+                <div class="w-[620px] flex-shrink-0 bg-white z-30 flex flex-col shadow-[2px_0_8px_-3px_rgba(0,0,0,0.15)] sticky left-0 border-r border-slate-200">
+                    <!-- Left Header -->
+                    <div class="h-[64px] border-b border-slate-200 bg-white flex items-end pb-2 px-4 sticky top-0 z-40">
+                        <div class="flex w-full text-[10px] font-bold text-slate-500 uppercase tracking-wider items-center">
+                            <div class="w-8 text-center">NO.</div>
+                            <div class="flex-1 px-2">TASK NAME</div>
+                            <div class="w-20 px-1">OWNER</div>
+                            <div class="w-10 text-center text-blue-600">P.W</div>
+                            <div class="w-10 text-center text-green-600">A.W</div>
+                            <div class="w-10 text-center">%</div>
+                            <div class="w-16 text-center">ACTION</div>
+                            <div class="w-16 text-center">UPDATED</div>
+                        </div>
+                    </div>
+                    <!-- Left Rows -->
+                    <div id="tl-left-rows" class="flex-1 bg-white"></div>
+                </div>
+
+                <!-- Right Scrollable Timeline -->
+                <div class="flex flex-col bg-white">
+                    <!-- Right Header (Months & Weeks) -->
+                    <div class="h-[64px] border-b border-slate-200 bg-white flex flex-col sticky top-0 z-20">
+                        <div id="tl-months-header" class="flex h-8 border-b border-slate-100"></div>
+                        <div id="tl-weeks-header" class="flex h-8"></div>
+                    </div>
+                    <!-- Right Grid & Bars -->
+                    <div id="tl-right-rows" class="flex-1 flex flex-col"></div>
                 </div>
             </div>
         </div>
     </div>
 
-    <!-- ================= ACTIVITY FORM MODAL ================= -->
-    <div id="activity-modal" class="fixed inset-0 bg-slate-900/60 z-[60] hide flex items-center justify-center p-4">
-        <div class="bg-white rounded-xl shadow-2xl max-w-lg w-full overflow-hidden">
-            <div class="bg-brand-dark text-white px-5 py-3 flex justify-between items-center">
-                <h3 class="font-semibold" id="act-form-title">เพิ่ม Activity ใหม่</h3>
-                <button onclick="closeActivityForm()" class="text-slate-300 hover:text-white"><i class="fa-solid fa-xmark"></i></button>
+    <!-- ================= ACTIVITY FORM MODAL (REDESIGNED) ================= -->
+    <div id="activity-modal" class="fixed inset-0 bg-slate-900/60 z-50 hide flex items-center justify-center p-4">
+        <div class="bg-slate-50 rounded-2xl shadow-2xl max-w-[600px] w-full overflow-hidden flex flex-col max-h-[95vh]">
+            
+            <div class="bg-brand-dark text-white px-6 py-4 flex justify-between items-center shrink-0">
+                <h3 class="font-bold text-lg" id="act-form-title">เพิ่ม Activity ใหม่</h3>
+                <button onclick="closeActivityForm()" class="text-slate-300 hover:text-white transition-colors"><i class="fa-solid fa-xmark text-xl"></i></button>
             </div>
-            <form id="activityForm" class="p-5 space-y-4" onsubmit="saveActivity(event)">
-                <input type="hidden" id="act-id">
-                <input type="hidden" id="act-project-id">
-                
-                <div>
-                    <label class="block text-sm font-semibold text-slate-700 mb-1">Task Name <span class="text-red-500">*</span></label>
-                    <input type="text" id="act-name" required class="w-full rounded-md border border-slate-300 px-3 py-2 text-sm">
-                </div>
-                <div>
-                    <label class="block text-sm font-semibold text-slate-700 mb-1">Owner</label>
-                    <input type="text" id="act-owner" class="w-full rounded-md border border-slate-300 px-3 py-2 text-sm">
-                </div>
-                
-                <div class="grid grid-cols-2 gap-4 border-t border-slate-100 pt-3">
-                    <div class="col-span-2"><span class="text-xs font-bold text-blue-600 uppercase">Plan Timeline (สีฟ้า)</span></div>
-                    <div>
-                        <label class="block text-xs font-semibold text-slate-700 mb-1">Plan Start <span class="text-red-500">*</span></label>
-                        <input type="date" id="act-plan-start" required class="w-full rounded-md border border-slate-300 px-3 py-2 text-sm">
+            
+            <div class="p-6 overflow-y-auto font-inter space-y-6">
+                <form id="activityForm" onsubmit="saveActivity(event)">
+                    <input type="hidden" id="act-id">
+                    <input type="hidden" id="act-project-id">
+                    
+                    <!-- Basic Info -->
+                    <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-5 mb-5">
+                        <div class="grid grid-cols-2 gap-5">
+                            <div class="col-span-2">
+                                <label class="block text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-2">Task Name <span class="text-red-500">*</span></label>
+                                <input type="text" id="act-name" required class="w-full rounded-xl border border-slate-200 px-4 py-3 text-base font-semibold text-slate-800 focus:border-blue-500 focus:ring-2 focus:ring-blue-50 outline-none transition-all">
+                            </div>
+                            <div class="col-span-1">
+                                <label class="block text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-2">Owner</label>
+                                <input type="text" id="act-owner" class="w-full rounded-xl border border-slate-200 px-4 py-3 text-base font-semibold text-slate-800 focus:border-blue-500 focus:ring-2 focus:ring-blue-50 outline-none transition-all">
+                            </div>
+                            <div class="col-span-1">
+                                <label class="block text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-2">Progress (%)</label>
+                                <input type="number" id="act-progress" min="0" max="100" value="0" class="w-full rounded-xl border border-slate-200 px-4 py-3 text-base font-semibold text-slate-800 focus:border-blue-500 focus:ring-2 focus:ring-blue-50 outline-none transition-all">
+                            </div>
+                        </div>
                     </div>
-                    <div>
-                        <label class="block text-xs font-semibold text-slate-700 mb-1">Plan End <span class="text-red-500">*</span></label>
-                        <input type="date" id="act-plan-end" required class="w-full rounded-md border border-slate-300 px-3 py-2 text-sm">
-                    </div>
-                </div>
 
-                <div class="grid grid-cols-2 gap-4 border-t border-slate-100 pt-3">
-                    <div class="col-span-2"><span class="text-xs font-bold text-green-600 uppercase">Actual Timeline (สีเขียว)</span></div>
-                    <div>
-                        <label class="block text-xs font-semibold text-slate-700 mb-1">Act Start</label>
-                        <input type="date" id="act-act-start" class="w-full rounded-md border border-slate-300 px-3 py-2 text-sm">
+                    <!-- Plan Section -->
+                    <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-5 mb-5 relative">
+                        <div class="absolute -top-3 left-4 bg-blue-100 text-blue-700 px-3 py-0.5 rounded-full text-[10px] font-bold border border-blue-200 uppercase tracking-wider">Plan Timeline</div>
+                        <div class="grid grid-cols-2 gap-5 mt-2 mb-5">
+                            <div>
+                                <label class="block text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-2">Start Date <span class="text-red-500">*</span></label>
+                                <input type="date" id="act-plan-start" required class="w-full rounded-xl border border-slate-200 px-4 py-3 text-base sm:text-lg font-bold text-slate-800 focus:border-blue-500 focus:ring-2 focus:ring-blue-50 outline-none transition-all">
+                            </div>
+                            <div>
+                                <label class="block text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-2">End Date <span class="text-red-500">*</span></label>
+                                <input type="date" id="act-plan-end" required class="w-full rounded-xl border border-slate-200 px-4 py-3 text-base sm:text-lg font-bold text-slate-800 focus:border-blue-500 focus:ring-2 focus:ring-blue-50 outline-none transition-all">
+                            </div>
+                        </div>
+                        <div class="border-t border-slate-100 pt-5 flex">
+                            <div class="w-full sm:w-1/2 pr-0 sm:pr-2.5">
+                                <label class="block text-[11px] font-bold text-blue-600 uppercase tracking-wider mb-2">Plan (Weeks)</label>
+                                <input type="text" id="act-plan-weeks" readonly placeholder="" class="w-full rounded-xl bg-slate-100 border-transparent px-4 py-3 text-xl font-black text-slate-600 outline-none cursor-default shadow-inner">
+                            </div>
+                        </div>
                     </div>
-                    <div>
-                        <label class="block text-xs font-semibold text-slate-700 mb-1">Act End</label>
-                        <input type="date" id="act-act-end" class="w-full rounded-md border border-slate-300 px-3 py-2 text-sm">
+
+                    <!-- Act Section -->
+                    <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-5 relative">
+                        <div class="absolute -top-3 left-4 bg-green-100 text-green-700 px-3 py-0.5 rounded-full text-[10px] font-bold border border-green-200 uppercase tracking-wider">Actual Timeline</div>
+                        <div class="grid grid-cols-2 gap-5 mt-2 mb-5">
+                            <div>
+                                <label class="block text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-2">Start Date</label>
+                                <input type="date" id="act-act-start" class="w-full rounded-xl border border-slate-200 px-4 py-3 text-base sm:text-lg font-bold text-slate-800 focus:border-green-500 focus:ring-2 focus:ring-green-50 outline-none transition-all">
+                            </div>
+                            <div>
+                                <label class="block text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-2">End Date</label>
+                                <input type="date" id="act-act-end" class="w-full rounded-xl border border-slate-200 px-4 py-3 text-base sm:text-lg font-bold text-slate-800 focus:border-green-500 focus:ring-2 focus:ring-green-50 outline-none transition-all">
+                            </div>
+                        </div>
+                        <div class="border-t border-slate-100 pt-5 flex justify-end">
+                            <div class="w-full sm:w-1/2 pl-0 sm:pl-2.5">
+                                <label class="block text-[11px] font-bold text-green-600 uppercase tracking-wider mb-2">Actual (Weeks)</label>
+                                <input type="text" id="act-act-weeks" readonly placeholder="" class="w-full rounded-xl border border-green-300 bg-white px-4 py-3 text-xl font-black text-slate-700 outline-none cursor-default shadow-[0_2px_10px_-3px_rgba(34,197,94,0.15)]">
+                            </div>
+                        </div>
                     </div>
-                </div>
 
-                <div class="border-t border-slate-100 pt-3">
-                    <label class="block text-sm font-semibold text-slate-700 mb-1">Progress (%)</label>
-                    <input type="number" id="act-progress" min="0" max="100" value="0" class="w-full rounded-md border border-slate-300 px-3 py-2 text-sm">
-                </div>
-
-                <div class="pt-2 flex justify-end gap-2">
-                    <button type="button" onclick="closeActivityForm()" class="px-4 py-2 rounded-md text-sm font-medium text-slate-600 bg-slate-100 hover:bg-slate-200">ยกเลิก</button>
-                    <button type="submit" class="px-4 py-2 rounded-md text-sm font-medium text-white bg-blue-600 hover:bg-blue-700">บันทึก</button>
-                </div>
-            </form>
+                    <div class="pt-2 flex justify-end gap-3">
+                        <button type="button" onclick="closeActivityForm()" class="px-6 py-3 rounded-xl text-sm font-bold text-slate-600 bg-white border border-slate-300 hover:bg-slate-50 transition-colors">Cancel</button>
+                        <button type="submit" class="px-6 py-3 rounded-xl text-sm font-bold text-white bg-blue-600 hover:bg-blue-700 shadow-md transition-colors">Save Activity</button>
+                    </div>
+                </form>
+            </div>
         </div>
     </div>
 
     <!-- Toast Notification -->
-    <div id="toast" class="fixed top-20 right-4 bg-green-600 text-white px-6 py-3 rounded-lg shadow-lg flex items-center gap-3 z-50 hide">
+    <div id="toast" class="fixed top-20 right-4 bg-green-600 text-white px-6 py-3 rounded-lg shadow-lg flex items-center gap-3 z-[70] hide">
         <i class="fa-solid fa-circle-check text-xl"></i>
         <div>
             <h4 class="font-bold text-sm">สำเร็จ!</h4>
@@ -383,37 +455,63 @@
         let deptChartInst = null;
         let currentTimelineProjectId = null;
 
+        // Constants for Timeline Layout
+        const DAY_WIDTH_PX = 48 / 7; // 48px per week column
+        const WEEK_WIDTH_PX = 48;
+
+        // --- FILTER LOGIC ---
+        function populateFilters() {
+            const deptSelect = document.getElementById('filter-department');
+            const currentDept = deptSelect.value || 'All';
+            const depts = [...new Set(projects.map(p => p.department))].sort();
+            deptSelect.innerHTML = '<option value="All">All</option>' + depts.map(d => `<option value="${d}">${d}</option>`).join('');
+            if (depts.includes(currentDept)) deptSelect.value = currentDept;
+        }
+
+        function getFilteredProjects() {
+            const status = document.getElementById('filter-status').value;
+            const type = document.getElementById('filter-type').value;
+            const dept = document.getElementById('filter-department').value;
+            const search = document.getElementById('search-countermeasure').value.toLowerCase();
+
+            return projects.filter(p => {
+                const matchStatus = status === 'All' || p.status === status;
+                const matchType = type === 'All' || p.type === type;
+                const matchDept = dept === 'All' || p.department === dept;
+                const matchSearch = p.countermeasure.toLowerCase().includes(search);
+                return matchStatus && matchType && matchDept && matchSearch;
+            });
+        }
+
         // --- 2. LOAD DATA ---
         async function loadProjects() {
             if (!SUPABASE_URL.startsWith('http')) {
                 // Mock data
                 projects = [
                     { 
-                        id: 1, division: 'ฝ่ายสินค้าหลักทอง', countermeasure: 'Stuffing Station Upgrade', department: 'WH-Stuffing', 
-                        type: 'Physical', priority: 'High', name_owner: 'WH Team', status: 'In Progress', progress: 50,
+                        id: 1, division: 'ฝ่ายสินค้าหลักทอง', countermeasure: '1.ศึกษา Concept ร่วมกับทีมงาน', department: 'WH-Stuffing', 
+                        type: 'Physical', priority: 'High', name_owner: 'Sathaporn', status: 'In Progress', progress: 50,
+                        start_date: '2026-06-08', end_date: '2026-11-15',
                         activities: [
-                            { id: 101, name: 'Site Survey', owner: 'John', pStart: '2026-03-01', pEnd: '2026-03-15', aStart: '2026-03-02', aEnd: '2026-03-14', progress: 100 },
-                            { id: 102, name: 'Equipment Ordering', owner: 'Sarah', pStart: '2026-03-16', pEnd: '2026-04-10', aStart: '2026-03-16', aEnd: '', progress: 50 },
-                            { id: 103, name: 'Installation', owner: 'Mike', pStart: '2026-04-15', pEnd: '2026-05-20', aStart: '', aEnd: '', progress: 0 }
+                            { id: 101, name: '1.ศึกษา Concept ร่วมกับ...', owner: 'Sathaporn...', pStart: '2026-06-08', pEnd: '2026-07-06', aStart: '2026-06-08', aEnd: '2026-06-25', progress: 50, updated: '08/04/26' },
+                            { id: 102, name: '2.Design Microsoft ...', owner: 'Sathaporn...', pStart: '2026-07-07', pEnd: '2026-08-07', aStart: '2026-07-07', aEnd: '2026-07-20', progress: 50, updated: '08/04/26' },
+                            { id: 103, name: '3.จัดทำคำถามเกี่ยวกับ...', owner: 'Sathaporn...', pStart: '2026-08-08', pEnd: '2026-10-10', aStart: '2026-08-08', aEnd: '2026-08-30', progress: 10, updated: '08/04/26' },
+                            { id: 104, name: '4.ทดลอง Demo ใช้งาน...', owner: 'Sathaporn...', pStart: '2026-10-11', pEnd: '2026-11-15', aStart: '', aEnd: '', progress: 0, updated: '08/04/26' }
                         ] 
-                    },
-                    { 
-                        id: 2, division: 'ตู้สินค้า Container', countermeasure: 'Gate Automation', department: 'Port', 
-                        type: 'Systems', priority: 'High', name_owner: 'IT Team', status: 'Pending', progress: 0,
-                        activities: []
                     }
                 ];
                 recalculateProjectProgresses();
+                populateFilters();
                 renderDashboard();
                 return;
             }
 
             try {
-                // To support activities in real DB, projects table needs an 'activities' JSONB column.
                 const { data, error } = await supabaseClient.from('projects').select('*').order('id', { ascending: false });
                 if (error) throw error;
-                projects = data.map(p => ({...p, activities: p.activities || []})); // Ensure array
+                projects = data.map(p => ({...p, activities: p.activities || []}));
                 recalculateProjectProgresses();
+                populateFilters();
                 renderDashboard();
             } catch (error) {
                 console.error('Error fetching data:', error.message);
@@ -421,7 +519,7 @@
             }
         }
 
-        // --- 3. NAVIGATION & UI ---
+        // --- 3. UI NAVIGATION & HELPERS ---
         function switchTab(tabId) {
             const viewDashboard = document.getElementById('view-dashboard');
             const viewForm = document.getElementById('view-form');
@@ -450,11 +548,10 @@
             }, 3000);
         }
 
-        // --- 4. PROJECT CRUD ---
+        // --- 4. PROJECT CRUD (Main Form) ---
         function editProject(id) {
             const p = projects.find(x => x.id === id);
             if(!p) return;
-            
             document.getElementById('form-title').innerText = 'แก้ไขโปรเจกต์ (Edit Project)';
             document.getElementById('f-id').value = p.id;
             document.getElementById('f-countermeasure').value = p.countermeasure;
@@ -464,7 +561,8 @@
             document.getElementById('f-type').value = p.type;
             document.getElementById('f-priority').value = p.priority;
             document.getElementById('f-status').value = p.status;
-            
+            document.getElementById('f-project-start').value = p.start_date || '';
+            document.getElementById('f-project-end').value = p.end_date || '';
             switchTab('form');
         }
 
@@ -477,23 +575,18 @@
 
         async function deleteProject(id) {
             if(!confirm('คุณแน่ใจหรือไม่ที่จะลบโปรเจกต์นี้?')) return;
-            
             if (!SUPABASE_URL.startsWith('http')) {
                 projects = projects.filter(x => x.id !== id);
-                renderDashboard();
-                showToast('ลบโปรเจกต์เรียบร้อย');
-                return;
+                populateFilters();
+                renderDashboard(); showToast('ลบโปรเจกต์เรียบร้อย'); return;
             }
-
             try {
                 const { error } = await supabaseClient.from('projects').delete().eq('id', id);
                 if(error) throw error;
                 projects = projects.filter(x => x.id !== id);
-                renderDashboard();
-                showToast('ลบโปรเจกต์เรียบร้อย');
-            } catch(e) {
-                alert('ลบข้อมูลไม่สำเร็จ: ' + e.message);
-            }
+                populateFilters();
+                renderDashboard(); showToast('ลบโปรเจกต์เรียบร้อย');
+            } catch(e) { alert('ลบข้อมูลไม่สำเร็จ: ' + e.message); }
         }
 
         async function handleFormSubmit(e) {
@@ -512,6 +605,8 @@
                 type: document.getElementById('f-type').value,
                 priority: document.getElementById('f-priority').value,
                 status: document.getElementById('f-status').value,
+                start_date: document.getElementById('f-project-start').value || null,
+                end_date: document.getElementById('f-project-end').value || null,
             };
 
             if (!SUPABASE_URL.startsWith('http')) {
@@ -519,13 +614,11 @@
                     const idx = projects.findIndex(x => x.id == editId);
                     if(idx > -1) projects[idx] = { ...projects[idx], ...newData };
                 } else {
-                    newData.id = projects.length > 0 ? Math.max(...projects.map(p => p.id || 0)) + 1 : 1;
-                    newData.progress = 0;
-                    newData.activities = [];
+                    newData.id = Date.now(); newData.progress = 0; newData.activities = [];
                     projects.unshift(newData);
                 }
-                finishProjectSubmit(submitBtn, originalBtnHtml);
-                return;
+                populateFilters();
+                finishProjectSubmit(submitBtn, originalBtnHtml); return;
             }
 
             try {
@@ -535,12 +628,12 @@
                     const idx = projects.findIndex(x => x.id == editId);
                     if(idx > -1) projects[idx] = { ...projects[idx], ...newData };
                 } else {
-                    newData.progress = 0;
-                    newData.activities = [];
+                    newData.progress = 0; newData.activities = [];
                     const { data, error } = await supabaseClient.from('projects').insert([newData]).select();
                     if (error) throw error;
                     if (data && data.length > 0) projects.unshift(data[0]);
                 }
+                populateFilters();
                 finishProjectSubmit(submitBtn, originalBtnHtml);
             } catch (error) {
                 console.error('Save error:', error.message);
@@ -551,20 +644,16 @@
 
         function finishProjectSubmit(btn, originalHtml) {
             btn.innerHTML = originalHtml; btn.disabled = false;
-            cancelEdit();
-            showToast();
+            cancelEdit(); showToast();
         }
 
-        // --- 5. TIMELINE & ACTIVITIES ---
+        // --- 5. ADVANCED TIMELINE LOGIC ---
         function recalculateProjectProgresses() {
             projects.forEach(p => {
                 if(!p.activities) p.activities = [];
-                if(p.activities.length === 0) return; // Keep manual progress if no activities
-                
+                if(p.activities.length === 0) return;
                 const totalProgress = p.activities.reduce((sum, act) => sum + (parseInt(act.progress)||0), 0);
                 p.progress = Math.round(totalProgress / p.activities.length);
-                
-                // Optional: Update status based on progress
                 if(p.progress === 100) p.status = 'Completed';
                 else if(p.progress > 0) p.status = 'In Progress';
             });
@@ -573,15 +662,10 @@
         async function updateProjectActivities(project) {
             if (SUPABASE_URL.startsWith('http')) {
                 try {
-                    // Save the updated activities JSON and new progress back to DB
-                    await supabaseClient.from('projects')
-                        .update({ activities: project.activities, progress: project.progress, status: project.status })
-                        .eq('id', project.id);
-                } catch(e) {
-                    console.error("Failed to sync activities to DB", e);
-                }
+                    await supabaseClient.from('projects').update({ activities: project.activities, progress: project.progress, status: project.status }).eq('id', project.id);
+                } catch(e) { console.error("Failed to sync activities to DB", e); }
             }
-            renderDashboard(); // Update background lists
+            renderDashboard();
         }
 
         function openTimeline(projectId) {
@@ -597,7 +681,6 @@
             currentTimelineProjectId = null;
         }
 
-        // Timeline Calculation Helpers
         function getISOWeek(date) {
             const d = new Date(Date.UTC(date.getFullYear(), date.getMonth(), date.getDate()));
             const dayNum = d.getUTCDay() || 7;
@@ -606,157 +689,165 @@
             return Math.ceil((((d - yearStart) / 86400000) + 1)/7);
         }
 
-        function generateTimelineWeeks(activities) {
-            let minDate = new Date();
-            let maxDate = new Date();
-            minDate.setMonth(minDate.getMonth() - 1); // default 1 month before
-            maxDate.setMonth(maxDate.getMonth() + 4); // default 4 months after
-
-            if(activities.length > 0) {
-                let allDates = [];
-                activities.forEach(a => {
-                    if(a.pStart) allDates.push(new Date(a.pStart));
-                    if(a.pEnd) allDates.push(new Date(a.pEnd));
-                    if(a.aStart) allDates.push(new Date(a.aStart));
-                    if(a.aEnd) allDates.push(new Date(a.aEnd));
-                });
-                if(allDates.length > 0) {
-                    minDate = new Date(Math.min(...allDates));
-                    maxDate = new Date(Math.max(...allDates));
-                    // Pad by 2 weeks
-                    minDate.setDate(minDate.getDate() - 14);
-                    maxDate.setDate(maxDate.getDate() + 14);
-                }
-            }
-
-            // Generate week segments
-            let weeks = [];
-            let curr = new Date(minDate);
-            // Move to start of week (Monday)
-            curr.setDate(curr.getDate() - (curr.getDay() === 0 ? 6 : curr.getDay() - 1));
-            
-            while(curr <= maxDate) {
-                const year = curr.getFullYear();
-                const monthName = curr.toLocaleString('default', { month: 'short' });
-                const isoWeek = getISOWeek(curr);
-                
-                weeks.push({
-                    date: new Date(curr),
-                    year: year,
-                    monthStr: `${monthName} '${year.toString().slice(-2)}`,
-                    weekNo: isoWeek,
-                    time: curr.getTime()
-                });
-                curr.setDate(curr.getDate() + 7);
-            }
-            return weeks;
-        }
-
-        function formatWeek(dateStr) {
-            if(!dateStr) return '-';
-            return `W${getISOWeek(new Date(dateStr))}`;
+        function getDurationWeeks(sDate, eDate) {
+            if(!sDate) return '-';
+            const s = new Date(sDate); const e = eDate ? new Date(eDate) : new Date();
+            const days = Math.max(0, e - s) / 86400000 + 1;
+            return (days / 7).toFixed(1);
         }
 
         function renderTimeline() {
             const project = projects.find(p => p.id === currentTimelineProjectId);
             const acts = project.activities || [];
-            const container = document.getElementById('timeline-container');
             
-            const weeks = generateTimelineWeeks(acts);
-            
-            // Group weeks by month for the top header
-            const months = [];
-            let currentMonth = null;
-            weeks.forEach(w => {
-                if(currentMonth !== w.monthStr) {
-                    months.push({ name: w.monthStr, span: 1 });
-                    currentMonth = w.monthStr;
-                } else {
-                    months[months.length-1].span++;
-                }
-            });
+            // 1. Calculate Date Range (Min 1 month ago, Max 6 months future)
+            let minDate = new Date(); minDate.setMonth(minDate.getMonth() - 1);
+            let maxDate = new Date(); maxDate.setMonth(maxDate.getMonth() + 6);
 
-            // Build Grid Column Template: [Table] [W1] [W2] ...
-            container.style.gridTemplateColumns = `minmax(450px, auto) repeat(${weeks.length}, minmax(40px, 1fr))`;
-
-            let html = '';
-            
-            // Row 1: Headers (Months)
-            html += `<div class="bg-slate-50 border-r border-b border-slate-200"></div>`; // Empty top-left
-            months.forEach(m => {
-                html += `<div class="bg-slate-50 p-2 font-bold text-center text-xs text-slate-600 border-r border-b border-slate-200" style="grid-column: span ${m.span}">${m.name}</div>`;
-            });
-
-            // Row 2: Headers (Table Columns + Weeks)
-            html += `
-                <div class="bg-slate-50 flex border-b border-slate-200 text-xs font-bold text-slate-500 uppercase">
-                    <div class="w-8 p-2 text-center border-r border-slate-200">No.</div>
-                    <div class="flex-1 p-2 border-r border-slate-200">Task Name</div>
-                    <div class="w-20 p-2 border-r border-slate-200">Owner</div>
-                    <div class="w-12 p-2 border-r border-slate-200 text-blue-600">P.W</div>
-                    <div class="w-12 p-2 border-r border-slate-200 text-green-600">A.W</div>
-                    <div class="w-12 p-2 border-r border-slate-200">%</div>
-                    <div class="w-16 p-2 text-center">Action</div>
-                </div>
-            `;
-            weeks.forEach(w => {
-                html += `<div class="bg-slate-50 p-2 text-center text-[10px] text-slate-500 border-r border-b border-slate-200">W${w.weekNo}</div>`;
-            });
-
-            // Data Rows
-            if(acts.length === 0) {
-                html += `<div class="p-8 text-center text-slate-400 italic" style="grid-column: 1 / -1">No activities found. Click 'Add Activity' to start.</div>`;
-            } else {
-                acts.forEach((act, idx) => {
-                    // Table Cell
-                    html += `
-                        <div class="flex border-b border-slate-200 text-sm hover:bg-slate-50 transition-colors bg-white">
-                            <div class="w-8 p-2 text-center border-r border-slate-100 text-slate-500">${idx+1}</div>
-                            <div class="flex-1 p-2 border-r border-slate-100 font-medium">${act.name}</div>
-                            <div class="w-20 p-2 border-r border-slate-100 text-xs truncate">${act.owner}</div>
-                            <div class="w-12 p-2 border-r border-slate-100 text-xs text-blue-600 font-medium">${formatWeek(act.pStart)}</div>
-                            <div class="w-12 p-2 border-r border-slate-100 text-xs text-green-600 font-medium">${formatWeek(act.aStart)}</div>
-                            <div class="w-12 p-2 border-r border-slate-100 text-xs text-center font-bold">${act.progress}%</div>
-                            <div class="w-16 p-2 flex justify-center gap-2">
-                                <button onclick="editActivity(${act.id})" class="text-blue-500 hover:text-blue-700"><i class="fa-solid fa-pen"></i></button>
-                                <button onclick="deleteActivity(${act.id})" class="text-red-500 hover:text-red-700"><i class="fa-solid fa-trash"></i></button>
-                            </div>
-                        </div>
-                    `;
-
-                    // Timeline Cells
-                    weeks.forEach(w => {
-                        const wStart = w.time;
-                        const wEnd = wStart + (7 * 86400000);
-                        
-                        let bars = '';
-                        // Plan Bar
-                        if(act.pStart && act.pEnd) {
-                            const pS = new Date(act.pStart).getTime();
-                            const pE = new Date(act.pEnd).getTime();
-                            if(pE >= wStart && pS < wEnd) {
-                                // Simple coverage logic: if week is between start and end, draw bar
-                                bars += `<div class="timeline-bar-plan" title="Plan: ${act.pStart} to ${act.pEnd}"></div>`;
-                            }
-                        }
-                        // Act Bar
-                        if(act.aStart) {
-                            const aS = new Date(act.aStart).getTime();
-                            const aE = act.aEnd ? new Date(act.aEnd).getTime() : new Date().getTime(); // ongoing to today if no end
-                            if(aE >= wStart && aS < wEnd) {
-                                bars += `<div class="timeline-bar-act" title="Act: ${act.aStart} to ${act.aEnd||'Now'}"></div>`;
-                            }
-                        }
-
-                        html += `<div class="timeline-cell bg-white hover:bg-slate-50">${bars}</div>`;
-                    });
+            if(acts.length > 0) {
+                let allDates = [];
+                acts.forEach(a => {
+                    if(a.pStart) allDates.push(new Date(a.pStart)); if(a.pEnd) allDates.push(new Date(a.pEnd));
+                    if(a.aStart) allDates.push(new Date(a.aStart)); if(a.aEnd) allDates.push(new Date(a.aEnd));
                 });
+                if(allDates.length > 0) {
+                    const dataMin = new Date(Math.min(...allDates));
+                    const dataMax = new Date(Math.max(...allDates));
+                    if(dataMin < minDate) minDate = dataMin;
+                    if(dataMax > maxDate) maxDate = dataMax;
+                }
+            }
+            
+            minDate.setDate(minDate.getDate() - (minDate.getDay() === 0 ? 6 : minDate.getDay() - 1));
+            
+            let weeks = [];
+            let curr = new Date(minDate);
+            while(curr <= maxDate) {
+                const year = curr.getFullYear();
+                const monthName = curr.toLocaleString('en-US', { month: 'short' });
+                weeks.push({ date: new Date(curr), monthStr: `${monthName} '${year.toString().slice(-2)}`, weekNo: getISOWeek(curr), time: curr.getTime() });
+                curr.setDate(curr.getDate() + 7);
             }
 
-            container.innerHTML = html;
+            const startDateMs = weeks[0].time;
+            function calcLeftPx(dateStr) {
+                if(!dateStr) return 0;
+                return ((new Date(dateStr).getTime() - startDateMs) / 86400000) * DAY_WIDTH_PX;
+            }
+            function calcWidthPx(sStr, eStr) {
+                if(!sStr) return 0;
+                const end = eStr ? new Date(eStr).getTime() : new Date().getTime();
+                const days = Math.max(0, end - new Date(sStr).getTime()) / 86400000 + 1;
+                return days * DAY_WIDTH_PX;
+            }
+
+            // 2. Generate Right Headers
+            const months = [];
+            let currM = null;
+            weeks.forEach(w => {
+                if(currM !== w.monthStr) { months.push({ name: w.monthStr, span: 1 }); currM = w.monthStr; }
+                else months[months.length-1].span++;
+            });
+
+            document.getElementById('tl-months-header').innerHTML = months.map(m => 
+                `<div class="flex items-center justify-center text-[11px] font-bold text-slate-700 border-r border-slate-100 bg-white" style="width: ${m.span * WEEK_WIDTH_PX}px">${m.name}</div>`
+            ).join('');
+            
+            document.getElementById('tl-weeks-header').innerHTML = weeks.map(w => 
+                `<div class="flex items-center justify-center text-[10px] font-medium text-slate-400 border-r border-slate-100 bg-white" style="width: ${WEEK_WIDTH_PX}px">W${w.weekNo}</div>`
+            ).join('');
+
+            // 3. Generate Rows (Left Table + Right Grid)
+            const leftContainer = document.getElementById('tl-left-rows');
+            const rightContainer = document.getElementById('tl-right-rows');
+            leftContainer.innerHTML = ''; rightContainer.innerHTML = '';
+
+            if(acts.length === 0) {
+                leftContainer.innerHTML = `<div class="p-8 text-center text-slate-400 italic text-sm">No activities.</div>`;
+            } else {
+                acts.forEach((act, idx) => {
+                    // LEFT TABLE ROW
+                    const leftRow = document.createElement('div');
+                    leftRow.className = "flex w-full items-center text-xs border-b border-slate-100 tl-row h-[48px]";
+                    
+                    const todayStr = new Date().toLocaleDateString('en-GB', {day:'2-digit', month:'2-digit', year:'2-digit'});
+                    
+                    leftRow.innerHTML = `
+                        <div class="w-8 text-center text-slate-400 font-medium">${idx+1}</div>
+                        <div class="flex-1 px-2 font-bold text-slate-800 truncate flex items-center">
+                            ${act.name}
+                            ${idx === 0 ? `<span class="ml-2 bg-blue-50 text-blue-500 border border-blue-200 rounded px-1.5 py-0.5 text-[9px] flex items-center"><i class="fa-solid fa-paperclip mr-1"></i> Files (1)</span>` : ''}
+                        </div>
+                        <div class="w-20 px-1 text-slate-500 truncate">${act.owner || '-'}</div>
+                        <div class="w-10 text-center font-bold text-blue-600">${getDurationWeeks(act.pStart, act.pEnd)}</div>
+                        <div class="w-10 text-center font-bold text-green-600">${act.aStart ? getDurationWeeks(act.aStart, act.aEnd) : '-'}</div>
+                        <div class="w-10 text-center font-bold text-slate-900">${act.progress}%</div>
+                        <div class="w-16 flex justify-center">
+                            <button onclick="editActivity(${act.id})" class="border border-slate-200 text-slate-500 hover:text-blue-600 hover:border-blue-300 rounded-md px-2 py-1 text-[9px] font-bold flex flex-col items-center bg-white shadow-sm transition-all leading-tight">
+                                <i class="fa-regular fa-pen-to-square mb-[1px]"></i> Edit
+                            </button>
+                        </div>
+                        <div class="w-16 text-center text-slate-400 text-[10px] tracking-tighter">${act.updated || todayStr}</div>
+                    `;
+                    leftContainer.appendChild(leftRow);
+
+                    // RIGHT TIMELINE ROW
+                    const rightRow = document.createElement('div');
+                    rightRow.className = "flex border-b border-slate-100 relative tl-row h-[48px]";
+                    rightRow.style.width = `${weeks.length * WEEK_WIDTH_PX}px`;
+                    
+                    rightRow.innerHTML = weeks.map(() => `<div class="border-r border-slate-50 shrink-0" style="width: ${WEEK_WIDTH_PX}px"></div>`).join('');
+                    
+                    let barsHtml = '';
+                    if(act.pStart && act.pEnd) {
+                        const l = calcLeftPx(act.pStart); const w = calcWidthPx(act.pStart, act.pEnd);
+                        barsHtml += `<div class="tl-bar-plan" style="left: ${l}px; width: ${w}px;"></div>`;
+                    }
+                    if(act.aStart) {
+                        const l = calcLeftPx(act.aStart); const w = calcWidthPx(act.aStart, act.aEnd);
+                        barsHtml += `<div class="tl-bar-act" style="left: ${l}px; width: ${Math.max(w, 35)}px;">${act.progress}%</div>`;
+                    }
+                    
+                    const barsWrapper = document.createElement('div');
+                    barsWrapper.className = "absolute inset-0 pointer-events-none";
+                    barsWrapper.innerHTML = barsHtml;
+                    rightRow.appendChild(barsWrapper);
+
+                    rightContainer.appendChild(rightRow);
+
+                    // Sync hover states
+                    leftRow.addEventListener('mouseenter', () => { leftRow.style.backgroundColor = '#f8fafc'; rightRow.style.backgroundColor = '#f8fafc'; });
+                    leftRow.addEventListener('mouseleave', () => { leftRow.style.backgroundColor = ''; rightRow.style.backgroundColor = ''; });
+                    rightRow.addEventListener('mouseenter', () => { leftRow.style.backgroundColor = '#f8fafc'; rightRow.style.backgroundColor = '#f8fafc'; });
+                    rightRow.addEventListener('mouseleave', () => { leftRow.style.backgroundColor = ''; rightRow.style.backgroundColor = ''; });
+                });
+            }
         }
 
-        // --- Activity Form ---
+        // --- Activity Form Management (Auto-Calculate Logic) ---
+        function calculateWeeksField(startId, endId, targetId) {
+            const start = document.getElementById(startId).value;
+            const end = document.getElementById(endId).value;
+            const target = document.getElementById(targetId);
+            if (start && end) {
+                const s = new Date(start); const e = new Date(end);
+                if (e >= s) {
+                    const days = (e - s) / 86400000 + 1;
+                    target.value = (days / 7).toFixed(1);
+                } else { target.value = '0.0'; }
+            } else { target.value = ''; }
+        }
+
+        function setupActivityCalculations() {
+            const calcPlan = () => calculateWeeksField('act-plan-start', 'act-plan-end', 'act-plan-weeks');
+            const calcAct = () => calculateWeeksField('act-act-start', 'act-act-end', 'act-act-weeks');
+            
+            document.getElementById('act-plan-start').addEventListener('change', calcPlan);
+            document.getElementById('act-plan-end').addEventListener('change', calcPlan);
+            document.getElementById('act-act-start').addEventListener('change', calcAct);
+            document.getElementById('act-act-end').addEventListener('change', calcAct);
+        }
+
         function openActivityForm(actId = null) {
             document.getElementById('activityForm').reset();
             document.getElementById('act-project-id').value = currentTimelineProjectId;
@@ -778,18 +869,21 @@
                 document.getElementById('act-id').value = '';
             }
             
+            // Trigger calculation to update read-only fields
+            calculateWeeksField('act-plan-start', 'act-plan-end', 'act-plan-weeks');
+            calculateWeeksField('act-act-start', 'act-act-end', 'act-act-weeks');
+            
             document.getElementById('activity-modal').classList.remove('hide');
         }
 
-        function closeActivityForm() {
-            document.getElementById('activity-modal').classList.add('hide');
-        }
+        function closeActivityForm() { document.getElementById('activity-modal').classList.add('hide'); }
 
         async function saveActivity(e) {
             e.preventDefault();
             const projectId = parseInt(document.getElementById('act-project-id').value);
             const actId = document.getElementById('act-id').value;
             const project = projects.find(p => p.id === projectId);
+            const todayStr = new Date().toLocaleDateString('en-GB', {day:'2-digit', month:'2-digit', year:'2-digit'});
             
             const newAct = {
                 name: document.getElementById('act-name').value,
@@ -798,7 +892,8 @@
                 pEnd: document.getElementById('act-plan-end').value,
                 aStart: document.getElementById('act-act-start').value,
                 aEnd: document.getElementById('act-act-end').value,
-                progress: parseInt(document.getElementById('act-progress').value) || 0
+                progress: parseInt(document.getElementById('act-progress').value) || 0,
+                updated: todayStr
             };
 
             if(actId) {
@@ -806,7 +901,7 @@
                 newAct.id = parseInt(actId);
                 project.activities[idx] = newAct;
             } else {
-                newAct.id = Date.now(); // simple unique ID
+                newAct.id = Date.now();
                 project.activities.push(newAct);
             }
 
@@ -818,41 +913,48 @@
             showToast('บันทึก Activity เรียบร้อย');
         }
 
-        function editActivity(id) {
-            openActivityForm(id);
-        }
+        function editActivity(id) { openActivityForm(id); }
 
         async function deleteActivity(id) {
             if(!confirm('ลบ Activity นี้?')) return;
             const project = projects.find(p => p.id === currentTimelineProjectId);
             project.activities = project.activities.filter(a => a.id !== id);
-            
-            recalculateProjectProgresses();
-            await updateProjectActivities(project);
-            
-            renderTimeline();
-            showToast('ลบ Activity แล้ว');
+            recalculateProjectProgresses(); await updateProjectActivities(project);
+            renderTimeline(); showToast('ลบ Activity แล้ว');
         }
 
         // --- 6. RENDER DASHBOARD ---
         function renderDashboard() {
-            updateKPIs(); renderTable(); renderCharts();
+            const filteredData = getFilteredProjects();
+            updateKPIs(filteredData); 
+            renderTable(filteredData); 
+            renderCharts(filteredData);
             const now = new Date();
             document.getElementById('last-update').innerText = now.getHours().toString().padStart(2, '0') + ':' + now.getMinutes().toString().padStart(2, '0');
         }
 
-        function updateKPIs() {
-            animateValue("kpi-total", 0, projects.length, 500);
-            animateValue("kpi-completed", 0, projects.filter(p => p.status === 'Completed').length, 500);
-            animateValue("kpi-progress", 0, projects.filter(p => p.status === 'In Progress').length, 500);
-            animateValue("kpi-pending", 0, projects.filter(p => p.status === 'Pending').length, 500);
+        function updateKPIs(data) {
+            const currentTotal = parseInt(document.getElementById("kpi-total").innerText) || 0;
+            const currentCompleted = parseInt(document.getElementById("kpi-completed").innerText) || 0;
+            const currentProgress = parseInt(document.getElementById("kpi-progress").innerText) || 0;
+            const currentPending = parseInt(document.getElementById("kpi-pending").innerText) || 0;
+
+            animateValue("kpi-total", currentTotal, data.length, 500);
+            animateValue("kpi-completed", currentCompleted, data.filter(p => p.status === 'Completed').length, 500);
+            animateValue("kpi-progress", currentProgress, data.filter(p => p.status === 'In Progress').length, 500);
+            animateValue("kpi-pending", currentPending, data.filter(p => p.status === 'Pending').length, 500);
         }
 
-        function renderTable() {
+        function renderTable(data) {
             const tbody = document.getElementById('table-body');
             tbody.innerHTML = '';
 
-            projects.forEach((p, index) => {
+            if(data.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="7" class="px-4 py-8 text-center text-slate-500 italic">ไม่พบข้อมูลโครงการที่ค้นหา</td></tr>`;
+                return;
+            }
+
+            data.forEach((p, index) => {
                 let statusBg = 'bg-slate-100 text-slate-800';
                 if(p.status === 'Completed') statusBg = 'bg-green-100 text-green-800';
                 if(p.status === 'In Progress') statusBg = 'bg-yellow-100 text-yellow-800';
@@ -883,6 +985,10 @@
                         <div>${p.type}</div>
                         <div class="${prioColor}">${p.priority}</div>
                     </td>
+                    <td class="px-4 py-3 text-xs text-slate-600 whitespace-nowrap">
+                        <div class="font-medium text-slate-700"><i class="fa-regular fa-calendar-plus text-blue-500 mr-1 w-3"></i> ${formatDate(p.start_date)}</div>
+                        <div class="mt-1 font-medium text-slate-700"><i class="fa-regular fa-calendar-check text-red-500 mr-1 w-3"></i> ${formatDate(p.end_date)}</div>
+                    </td>
                     <td class="px-4 py-3">
                         <span class="px-2.5 py-1 rounded-full text-xs font-medium ${statusBg}">${p.status}</span>
                     </td>
@@ -896,7 +1002,7 @@
                     </td>
                     <td class="px-4 py-3">
                         <div class="flex items-center justify-center gap-3">
-                            <button onclick="openTimeline(${p.id})" title="Timeline & Activities" class="bg-slate-100 hover:bg-blue-100 text-blue-600 px-3 py-1.5 rounded text-xs font-semibold border border-slate-200 shadow-sm flex items-center gap-1">
+                            <button onclick="openTimeline(${p.id})" title="Timeline & Activities" class="bg-slate-100 hover:bg-brand-dark hover:text-white text-brand-dark px-3 py-1.5 rounded-lg text-xs font-bold border border-slate-300 shadow-sm flex items-center gap-2 transition-colors">
                                 <i class="fa-solid fa-list-check"></i> Timeline <span class="bg-blue-600 text-white rounded-full px-1.5 py-0.5 text-[9px]">${p.activities ? p.activities.length : 0}</span>
                             </button>
                             <button onclick="editProject(${p.id})" class="text-slate-400 hover:text-blue-600" title="Edit Project"><i class="fa-solid fa-pen-to-square"></i></button>
@@ -909,24 +1015,23 @@
         }
 
         // --- 7. CHART.JS ---
-        function renderCharts() {
+        function renderCharts(data) {
             Chart.defaults.font.family = "'Sarabun', sans-serif";
-            
-            const statusCounts = { 'Completed': projects.filter(p=>p.status==='Completed').length, 'In Progress': projects.filter(p=>p.status==='In Progress').length, 'Pending': projects.filter(p=>p.status==='Pending').length };
+            const statusCounts = { 'Completed': data.filter(p=>p.status==='Completed').length, 'In Progress': data.filter(p=>p.status==='In Progress').length, 'Pending': data.filter(p=>p.status==='Pending').length };
             if(statusChartInst) statusChartInst.destroy();
             statusChartInst = new Chart(document.getElementById('statusChart').getContext('2d'), {
                 type: 'doughnut', data: { labels: Object.keys(statusCounts), datasets: [{ data: Object.values(statusCounts), backgroundColor: ['#22c55e', '#eab308', '#ef4444'], borderWidth: 0, hoverOffset: 4 }] },
                 options: { responsive: true, maintainAspectRatio: false, cutout: '70%', plugins: { legend: { position: 'right', labels: { usePointStyle: true, boxWidth: 8 } } } }
             });
 
-            const typeCounts = { 'Systems': projects.filter(p=>p.type==='Systems').length, 'Process': projects.filter(p=>p.type==='Process').length, 'Physical': projects.filter(p=>p.type==='Physical').length };
+            const typeCounts = { 'Systems': data.filter(p=>p.type==='Systems').length, 'Process': data.filter(p=>p.type==='Process').length, 'Physical': data.filter(p=>p.type==='Physical').length };
             if(typeChartInst) typeChartInst.destroy();
             typeChartInst = new Chart(document.getElementById('typeChart').getContext('2d'), {
                 type: 'doughnut', data: { labels: Object.keys(typeCounts), datasets: [{ data: Object.values(typeCounts), backgroundColor: ['#3b82f6', '#f97316', '#8b5cf6'], borderWidth: 0, hoverOffset: 4 }] },
                 options: { responsive: true, maintainAspectRatio: false, cutout: '70%', plugins: { legend: { position: 'right', labels: { usePointStyle: true, boxWidth: 8 } } } }
             });
 
-            const deptObj = {}; projects.forEach(p => { deptObj[p.department] = (deptObj[p.department] || 0) + 1; });
+            const deptObj = {}; data.forEach(p => { deptObj[p.department] = (deptObj[p.department] || 0) + 1; });
             const sortedDepts = Object.keys(deptObj).sort((a,b) => deptObj[b] - deptObj[a]).slice(0, 5);
             const deptData = sortedDepts.map(d => deptObj[d]);
 
@@ -935,6 +1040,13 @@
                 type: 'bar', data: { labels: sortedDepts, datasets: [{ label: 'Projects', data: deptData, backgroundColor: '#1e3a8a', borderRadius: 4 }] },
                 options: { indexAxis: 'y', responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { x: { beginAtZero: true, grid: { display: false }, ticks: { stepSize: 1 } }, y: { grid: { display: false } } } }
             });
+        }
+
+        // --- UTILS ---
+        function formatDate(dateStr) {
+            if(!dateStr) return '-';
+            const d = new Date(dateStr);
+            return `${d.getDate().toString().padStart(2,'0')}/${(d.getMonth()+1).toString().padStart(2,'0')}/${d.getFullYear()}`;
         }
 
         function animateValue(id, start, end, duration) {
@@ -948,7 +1060,10 @@
             }, stepTime);
         }
 
-        window.onload = () => loadProjects();
+        window.onload = () => {
+            setupActivityCalculations();
+            loadProjects();
+        };
     </script>
 </body>
 </html>
